@@ -1,0 +1,5 @@
+{
+  "name": "Gemini HA Integration Builder",
+  "description": "A tool to generate a Home Assistant custom integration for Gemini Live API (STT, TTS, Conversation).",
+  "requestFramePermissions": []
+}
