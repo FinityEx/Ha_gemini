@@ -1,0 +1,22 @@
+name: Validate HACS
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: HACS validation
+        uses: hacs/action@d556e736723344f83838d08488c983a15381059a # 22.5.0
+        with:
+          category: "integration"
+          # brands: requires a PR to home-assistant/brands (external step)
+          # topics: requires setting GitHub repository topics in repo settings
+          ignore: "brands topics"
