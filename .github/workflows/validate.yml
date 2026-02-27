@@ -17,3 +17,6 @@ jobs:
         uses: hacs/action@main
         with:
           category: "integration"
+          # brands: requires a PR to home-assistant/brands (external step)
+          # topics: requires setting GitHub repository topics in repo settings
+          ignore: "brands topics"
