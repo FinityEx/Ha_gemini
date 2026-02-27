@@ -5,7 +5,8 @@
   "documentation": "https://github.com/FinityEx/Ha_gemini",
   "issue_tracker": "https://github.com/FinityEx/Ha_gemini/issues",
   "codeowners": ["@FinityEx"],
-  "requirements": [],
+  "requirements": ["google-genai>=1.0.0"],
   "dependencies": [],
-  "iot_class": "cloud_push"
+  "iot_class": "cloud_push",
+  "config_flow": true
 }

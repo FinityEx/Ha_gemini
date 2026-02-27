@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Gemini HA",
+        "description": "Enter your Google Gemini API key. The integration will set up a conversation agent, a speech-to-text (STT) service, and a text-to-speech (TTS) service powered by the Gemini Live API.",
+        "data": {
+          "api_key": "API Key"
+        },
+        "data_description": {
+          "api_key": "Your Google Gemini API key. You can obtain one from https://aistudio.google.com/."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the Gemini API. Please verify your API key and try again.",
+      "unknown": "An unexpected error occurred."
+    },
+    "abort": {
+      "already_configured": "Gemini HA is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Gemini HA Options",
+        "data": {
+          "chat_model": "Conversation model",
+          "stt_language": "STT language",
+          "tts_voice": "TTS voice"
+        },
+        "data_description": {
+          "chat_model": "Gemini model used for the conversation agent (e.g. gemini-2.0-flash-live-001).",
+          "stt_language": "Language expected from the microphone input.",
+          "tts_voice": "Voice used for text-to-speech responses."
+        }
+      }
+    }
+  }
+}
