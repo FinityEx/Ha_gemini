@@ -65,6 +65,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Gemini TTS entity."""
+    _LOGGER.debug("Setting up Gemini TTS entity for entry %s", config_entry.entry_id)
     async_add_entities([GeminiTTSEntity(config_entry)])
 
 
@@ -123,7 +124,19 @@ class GeminiTTSEntity(TextToSpeechEntity):
             self._config_entry.options.get(CONF_TTS_VOICE, DEFAULT_TTS_VOICE),
         )
         if voice not in SUPPORTED_TTS_VOICES:
+            _LOGGER.warning(
+                "TTS voice '%s' is not supported; falling back to '%s'",
+                voice,
+                DEFAULT_TTS_VOICE,
+            )
             voice = DEFAULT_TTS_VOICE
+
+        _LOGGER.debug(
+            "TTS generation started: voice=%s, language=%s, message_length=%d chars",
+            voice,
+            language,
+            len(message),
+        )
 
         api_key: str = self._config_entry.data[CONF_API_KEY]
         client = genai.Client(api_key=api_key)
@@ -155,10 +168,15 @@ class GeminiTTSEntity(TextToSpeechEntity):
                         if model_turn is not None:
                             for part in model_turn.parts or []:
                                 if part.inline_data and part.inline_data.data:
-                                    audio_chunks.append(
-                                        base64.b64decode(part.inline_data.data)
+                                    decoded = base64.b64decode(part.inline_data.data)
+                                    audio_chunks.append(decoded)
+                                    _LOGGER.debug(
+                                        "TTS received audio chunk (total so far: %d, chunk size: %d bytes)",
+                                        len(audio_chunks),
+                                        len(decoded),
                                     )
                         if server_content.turn_complete:
+                            _LOGGER.debug("TTS turn complete signal received")
                             break
 
                     chunk_count += 1
@@ -173,7 +191,13 @@ class GeminiTTSEntity(TextToSpeechEntity):
                 _LOGGER.error("Gemini TTS returned no audio data")
                 return None
 
-            wav_bytes = _pcm_to_wav(b"".join(audio_chunks))
+            pcm_data = b"".join(audio_chunks)
+            _LOGGER.debug(
+                "TTS generation complete: %d chunks, %d total PCM bytes",
+                len(audio_chunks),
+                len(pcm_data),
+            )
+            wav_bytes = _pcm_to_wav(pcm_data)
             return ("wav", wav_bytes)
 
         except Exception as err:  # noqa: BLE001

@@ -1,6 +1,7 @@
 """Constants for the Gemini HA integration."""
 
 DOMAIN = "gemini_ha"
+INTEGRATION_VERSION = "1.1.0"
 
 CONF_API_KEY = "api_key"
 CONF_CHAT_MODEL = "chat_model"
