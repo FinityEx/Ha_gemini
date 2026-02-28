@@ -44,6 +44,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Gemini conversation entity."""
+    _LOGGER.debug(
+        "Setting up Gemini conversation entity for entry %s", config_entry.entry_id
+    )
     async_add_entities([GeminiConversationEntity(config_entry)])
 
 
@@ -98,13 +101,30 @@ class GeminiConversationEntity(
             }
         )
 
+        _LOGGER.debug(
+            "Conversation processing: conv_id=%s, model=%s, previous_turns=%d, input_length=%d chars",
+            conv_id,
+            model,
+            (len(history) - 1) // 2,
+            len(user_input.text),
+        )
+
         # Trim history to avoid exceeding context limits.
         if len(history) > _MAX_HISTORY_TURNS * 2:
-            history = history[-(  _MAX_HISTORY_TURNS * 2):]
+            history = history[-(_MAX_HISTORY_TURNS * 2):]
             self._histories[conv_id] = history
+            _LOGGER.debug(
+                "Conversation history trimmed to %d turns for conv_id=%s",
+                _MAX_HISTORY_TURNS,
+                conv_id,
+            )
 
         # Build the HA-entity tool definitions.
         ha_tools = _build_ha_tools(self.hass)
+        _LOGGER.debug(
+            "Conversation tool definitions built: %d tool set(s)",
+            len(ha_tools),
+        )
 
         client = genai.Client(api_key=api_key)
 
@@ -134,6 +154,10 @@ class GeminiConversationEntity(
 
             # If there were tool calls, send the results back and get the final reply.
             if tool_results:
+                _LOGGER.debug(
+                    "Conversation: %d tool call(s) executed, sending results back to model",
+                    len(tool_results),
+                )
                 history.append(
                     {"role": "model", "parts": [{"text": response_text or ""}]}
                 )
@@ -165,6 +189,12 @@ class GeminiConversationEntity(
 
             if not response_text:
                 response_text = "I'm sorry, I couldn't generate a response."
+
+            _LOGGER.debug(
+                "Conversation response generated: %d chars for conv_id=%s",
+                len(response_text),
+                conv_id,
+            )
 
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Gemini conversation error: %s", err)
@@ -312,7 +342,9 @@ async def _handle_tool_calls(
                 continue
             name = part.function_call.name
             args = dict(part.function_call.args or {})
+            _LOGGER.debug("Executing tool call: name=%s, args=%s", name, args)
             result = await _call_ha_service(hass, name, args)
+            _LOGGER.debug("Tool call result: name=%s, result=%s", name, result)
             tool_results.append(
                 f"Tool '{name}' result: {result}"
             )

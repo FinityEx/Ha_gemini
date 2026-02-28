@@ -40,6 +40,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Gemini STT entity."""
+    _LOGGER.debug("Setting up Gemini STT entity for entry %s", config_entry.entry_id)
     async_add_entities([GeminiSTTEntity(config_entry)])
 
 
@@ -99,16 +100,29 @@ class GeminiSTTEntity(SpeechToTextEntity):
         from google import genai  # noqa: PLC0415
         from google.genai import types  # noqa: PLC0415
 
+        language = self._config_entry.options.get(CONF_STT_LANGUAGE, DEFAULT_STT_LANGUAGE)
+        _LOGGER.debug(
+            "STT processing started: format=%s, codec=%s, sample_rate=%s, language=%s",
+            metadata.format,
+            metadata.codec,
+            metadata.sample_rate,
+            language,
+        )
+
         # Buffer the entire stream.
         audio_data = bytearray()
         async for chunk in stream:
             audio_data += chunk
 
+        _LOGGER.debug("STT audio buffer collected: %d bytes", len(audio_data))
+
         if not audio_data:
+            _LOGGER.warning("STT received empty audio stream")
             return SpeechResult("", SpeechResultState.ERROR)
 
         api_key: str = self._config_entry.data[CONF_API_KEY]
         mime_type = _FORMAT_TO_MIME.get(metadata.format, "audio/wav")
+        _LOGGER.debug("STT sending to Gemini API (mime_type=%s)", mime_type)
 
         try:
             client = genai.Client(api_key=api_key)
@@ -132,7 +146,9 @@ class GeminiSTTEntity(SpeechToTextEntity):
 
             text: str = (response.text or "").strip()
             if text:
+                _LOGGER.debug("STT transcription succeeded: %d characters", len(text))
                 return SpeechResult(text, SpeechResultState.SUCCESS)
+            _LOGGER.warning("STT transcription returned empty text")
             return SpeechResult("", SpeechResultState.ERROR)
 
         except Exception as err:  # noqa: BLE001
