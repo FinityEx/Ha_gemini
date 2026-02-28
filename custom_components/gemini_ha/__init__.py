@@ -57,8 +57,13 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.minor_version,
     )
 
-    # Future migrations go here as VERSION / MINOR_VERSION is incremented.
-    # Example pattern:
+    if entry.version == 1 and entry.minor_version < 1:
+        # v1.0 → v1.1: no data changes required; bump minor version so
+        # Home Assistant does not attempt migration again on next startup.
+        hass.config_entries.async_update_entry(entry, minor_version=1)
+
+    # Add further migration blocks here when VERSION or MINOR_VERSION is
+    # incremented in the future:
     #   if entry.version == 1 and entry.minor_version < 2:
     #       new_data = {**entry.data, "new_key": "default"}
     #       hass.config_entries.async_update_entry(entry, data=new_data, minor_version=2)

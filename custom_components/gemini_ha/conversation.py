@@ -111,7 +111,7 @@ class GeminiConversationEntity(
 
         # Trim history to avoid exceeding context limits.
         if len(history) > _MAX_HISTORY_TURNS * 2:
-            history = history[-(  _MAX_HISTORY_TURNS * 2):]
+            history = history[-(_MAX_HISTORY_TURNS * 2):]
             self._histories[conv_id] = history
             _LOGGER.debug(
                 "Conversation history trimmed to %d turns for conv_id=%s",
